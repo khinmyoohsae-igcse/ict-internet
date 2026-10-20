@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connecting to the Internet - Quiz</title>
+  <style>
+    :root {
+      --primary-color: #4f46e5;
+      --primary-hover: #4338ca;
+      --bg-color: #f3f4f6;
+      --card-bg: #ffffff;
+      --text-color: #1f2937;
+      --correct-color: #10b981;
+      --incorrect-color: #ef4444;
+      --border-color: #e5e7eb;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .quiz-container {
+      background-color: var(--card-bg);
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 650px;
+      padding: 30px;
+      position: relative;
+    }
+
+    .quiz-header {
+      margin-bottom: 20px;
+    }
+
+    .quiz-header h1 {
+      font-size: 1.5rem;
+      margin-bottom: 10px;
+      color: var(--primary-color);
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background-color: var(--border-color);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 15px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background-color: var(--primary-color);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    .quiz-status {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.9rem;
+      color: #6b7280;
+    }
+
+    .question-title {
+      font-size: 1.15rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .options-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 25px;
+    }
+
+    .option-btn {
+      background-color: #f9fafb;
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+    }
+
+    .option-btn:hover:not(:disabled) {
+      border-color: var(--primary-color);
+      background-color: #eef2ff;
+    }
+
+    .option-btn.correct {
+      background-color: #d1fae5;
+      border-color: var(--correct-color);
+      color: #065f46;
+      font-weight: 600;
+    }
+
+    .option-btn.incorrect {
+      background-color: #fee2e2;
+      border-color: var(--incorrect-color);
+      color: #991b1b;
+    }
+
+    .option-btn:disabled {
+      cursor: not-allowed;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .next-btn {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 24px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .next-btn:hover {
+      background-color: var(--primary-hover);
+    }
+
+    .next-btn:disabled {
+      background-color: #9ca3af;
+      cursor: not-allowed;
+    }
+
+    .result-screen {
+      text-align: center;
+      padding: 20px 0;
+    }
+
+    .result-screen h2 {
+      font-size: 2rem;
+      margin-bottom: 15px;
+      color: var(--primary-color);
+    }
+
+    .score-badge {
+      font-size: 3rem;
+      font-weight: bold;
+      color: var(--text-color);
+      margin-bottom: 20px;
+    }
+
+    .restart-btn {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 12px 28px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .hide {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="quiz-container">
+    <div id="quiz-screen">
+      <div class="quiz-header">
+        <h1>Connecting to the Internet</h1>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <div class="quiz-status">
+          <span id="question-count">Question 1 of 30</span>
+          <span id="score-counter">Score: 0</span>
+        </div>
+      </div>
+
+      <div class="question-title" id="question-text">Question text goes here...</div>
+
+      <div class="options-container" id="options-container">
+        <!-- Options injected dynamically -->
+      </div>
+
+      <div class="controls">
+        <button class="next-btn" id="next-btn" disabled>Next Question</button>
+      </div>
+    </div>
+
+    <div id="result-screen" class="result-screen hide">
+      <h2>Quiz Completed!</h2>
+      <div class="score-badge" id="final-score">0 / 30</div>
+      <p id="result-message" style="margin-bottom: 25px; color: #4b5563;"></p>
+      <button class="restart-btn" id="restart-btn">Try Again</button>
+    </div>
+  </div>
+
+  <script>
+    const quizData = [
+      { question: "How many main ways are there to connect to a network?", options: ["One", "Two", "Three", "Four"], answer: 1 },
+      { question: "Which type of connection is usually used in offices and classrooms?", options: ["Satellite", "Bluetooth", "Wired (Ethernet cables)", "Public hotspots"], answer: 2 },
+      { question: "Where do people usually use a wireless Wi-Fi connection?", options: ["Only in underwater research centers", "In their homes", "Only on aeroplanes", "Only in server rooms"], answer: 1 },
+      { question: "Which of the following is a key advantage of wired connections?", options: ["They allow complete mobility around a building", "They require no physical cabling", "They are stable, reliable, and fast", "They are free to set up anywhere"], answer: 2 },
+      { question: "What is a drawback of a wired network connection?", options: ["You cannot move around while staying connected", "Signals are constantly blocked by fridges", "Data is always unencrypted", "Connection speeds are slower than Wi-Fi"], answer: 0 },
+      { question: "What type of waves does Wi-Fi use to send data through the air?", options: ["Sound waves", "Infrared waves", "Radio waves", "Light waves"], answer: 2 },
+      { question: "What device receives and transmits radio waves to send data through the air for Wi-Fi?", options: ["SIM card", "Ethernet hub", "Wireless access point", "Microwave oven"], answer: 2 },
+      { question: "How can a wired network be converted into a wireless network?", options: ["By adding a wireless access point", "By replacing all Ethernet cables with fiber optics", "By inserting a SIM card into the switch", "By turning off the router firewall"], answer: 0 },
+      { question: "Why can anyone nearby potentially eavesdrop on data transmitted over a Wi-Fi network?", options: ["Wi-Fi cables are transparent", "All devices in range can pick up a Wi-Fi signal", "Ethernet ports broadcast radio signals", "Wi-Fi networks do not use passwords"], answer: 1 },
+      { question: "What happens if someone eavesdrops on an encrypted Wi-Fi network?", options: ["They can immediately change your password", "They can read all your personal files in plain text", "They are unlikely to understand the intercepted data", "Your device will automatically disconnect"], answer: 2 },
+      { question: "Why must you password-protect your home Wi-Fi network?", options: ["So that only people with the password can gain access", "To double the connection speed of your router", "To eliminate interference from thick walls", "To convert the network into a public hotspot"], answer: 0 },
+      { question: "Compared to wired connections, Wi-Fi signals are generally:", options: ["Faster and more reliable", "Less stable, less reliable, and slower", "Completely immune to physical barriers", "Unlimited in coverage range"], answer: 1 },
+      { question: "What device can be used to boost a Wi-Fi signal in rooms with poor reception?", options: ["Wireless access cable", "Wi-Fi repeater", "Ethernet switch", "SIM card reader"], answer: 1 },
+      { question: "Which physical structures can block or interfere with a Wi-Fi signal?", options: ["Wooden doors only", "Glass windows", "Thick walls", "Ethernet cables"], answer: 2 },
+      { question: "Which household appliances are mentioned as capable of interfering with Wi-Fi signals?", options: ["Fridges and microwave ovens", "Electric kettles and lamps", "Air conditioners and fans", "Washing machines and irons"], answer: 0 },
+      { question: "How many main ways are there to connect to the internet wirelessly?", options: ["Two", "Three", "Four", "Five"], answer: 1 },
+      { question: "Which of the following is an example of Private Wi-Fi?", options: ["Hotspots in a coffee shop", "Wi-Fi network at home, work, or school", "Wi-Fi on a public train", "Open Wi-Fi at an airport"], answer: 1 },
+      { question: "Data sent over Private Wi-Fi is almost always:", options: ["Unencrypted", "Encrypted", "Publicly accessible", "Intercepted by default"], answer: 1 },
+      { question: "What typically happens when you leave your home, work, or school network area?", options: ["Your device switches to Ethernet automatically", "You lose the Wi-Fi connection", "The network follows your location", "Your connection speed doubles"], answer: 1 },
+      { question: "Where are public hotspots typically found?", options: ["Classrooms and server rooms", "Hotels, coffee shops, and trains", "Underground mines only", "Private residential homes"], answer: 1 },
+      { question: "How do users frequently gain access to a public hotspot network?", options: ["By inserting a physical security token", "By signing in and entering details via a web page", "By entering the router's administrator password", "By connecting an Ethernet cable"], answer: 1 },
+      { question: "Why are many public hotspots considered dangerous?", options: ["They consume high amounts of device battery power", "They are often unencrypted, allowing data interception", "They destroy SIM cards upon connection", "They disable the device's firewall permanently"], answer: 1 },
+      { question: "How do cybercriminals use fake public hotspots to steal data?", options: ["By blocking all radio signals in the area", "By setting up hotspots with deceptive names like 'CoffeeShopWifi'", "By sending physical cables to your house", "By forcing your device to restart repeatedly"], answer: 1 },
+      { question: "If your device is set to automatically connect to a hotspot name, what risk does it face?", options: ["It will refuse to connect to any wireless network", "It will connect to any hotspot with that name, genuine or fake", "It will delete all stored passwords automatically", "It will permanently lock your SIM card"], answer: 1 },
+      { question: "What hardware component is required to connect to the internet using mobile data?", options: ["Ethernet cable", "SIM card", "Wi-Fi repeater", "Access point antenna"], answer: 1 },
+      { question: "Which of the following technologies represent types of mobile data?", options: ["2G, 3G, 4G, and 5G", "Dial-up, ADSL, and FTTP", "HTTP, HTTPS, and FTP", "LAN, WAN, and PAN"], answer: 0 },
+      { question: "What is a major advantage of mobile data regarding security?", options: ["It is unencrypted and open to everyone", "It is encrypted and very secure", "It requires sign-in via public web pages", "It does not transmit radio waves"], answer: 1 },
+      { question: "What is a potential financial drawback of using mobile data?", options: ["It requires buying expensive router hardware", "It is expensive, especially when exceeding contracted allowances", "It charges per meter of movement", "It requires a monthly subscription for cabling"], answer: 1 },
+      { question: "When might mobile data speeds slow down considerably?", options: ["When sitting near a microwave oven", "When lots of people use mobile data in a small area (e.g., festivals)", "When password-protecting your SIM card", "When turning on your device's Wi-Fi repeater"], answer: 1 },
+      { question: "Where might it be impossible to get a mobile data signal?", options: ["In a coffee shop", "In a classroom", "Underground", "Near a cell tower"], answer: 2 }
+    ];
+
+    let currentQuestionIndex = 0;
+    let score = 0;
+
+    const questionText = document.getElementById('question-text');
+    const optionsContainer = document.getElementById('options-container');
+    const nextBtn = document.getElementById('next-btn');
+    const questionCount = document.getElementById('question-count');
+    const scoreCounter = document.getElementById('score-counter');
+    const progressFill = document.getElementById('progress-fill');
+
+    const quizScreen = document.getElementById('quiz-screen');
+    const resultScreen = document.getElementById('result-screen');
+    const finalScore = document.getElementById('final-score');
+    const resultMessage = document.getElementById('result-message');
+    const restartBtn = document.getElementById('restart-btn');
+
+    function startQuiz() {
+      currentQuestionIndex = 0;
+      score = 0;
+      resultScreen.classList.add('hide');
+      quizScreen.classList.remove('hide');
+      showQuestion();
+    }
+
+    function showQuestion() {
+      resetState();
+      const currentQuestion = quizData[currentQuestionIndex];
+      
+      questionText.innerText = `${currentQuestionIndex + 1}. ${currentQuestion.question}`;
+      questionCount.innerText = `Question ${currentQuestionIndex + 1} of ${quizData.length}`;
+      scoreCounter.innerText = `Score: ${score}`;
+      
+      const progressPercent = ((currentQuestionIndex) / quizData.length) * 100;
+      progressFill.style.width = `${progressPercent}%`;
+
+      currentQuestion.options.forEach((option, index) => {
+        const button = document.createElement('button');
+        button.innerText = option;
+        button.classList.add('option-btn');
+        button.addEventListener('click', () => selectOption(button, index));
+        optionsContainer.appendChild(button);
+      });
+    }
+
+    function resetState() {
+      nextBtn.disabled = true;
+      optionsContainer.innerHTML = '';
+    }
+
+    function selectOption(selectedBtn, selectedIndex) {
+      const currentQuestion = quizData[currentQuestionIndex];
+      const correctIndex = currentQuestion.answer;
+      const buttons = optionsContainer.children;
+
+      Array.from(buttons).forEach((button, idx) => {
+        button.disabled = true;
+        if (idx === correctIndex) {
+          button.classList.add('correct');
+        }
+      });
+
+      if (selectedIndex === correctIndex) {
+        score++;
+        scoreCounter.innerText = `Score: ${score}`;
+      } else {
+        selectedBtn.classList.add('incorrect');
+      }
+
+      nextBtn.disabled = false;
+    }
+
+    nextBtn.addEventListener('click', () => {
+      currentQuestionIndex++;
+      if (currentQuestionIndex < quizData.length) {
+        showQuestion();
+      } else {
+        showResults();
+      }
+    });
+
+    function showResults() {
+      progressFill.style.width = `100%`;
+      quizScreen.classList.add('hide');
+      resultScreen.classList.remove('hide');
+      
+      finalScore.innerText = `${score} / ${quizData.length}`;
+      const percentage = (score / quizData.length) * 100;
+
+      if (percentage >= 80) {
+        resultMessage.innerText = "Excellent work! You have mastered network connection concepts.";
+      } else if (percentage >= 50) {
+        resultMessage.innerText = "Good effort! Review the pages once more to sharpen your score.";
+      } else {
+        resultMessage.innerText = "Keep practicing! Review the material and try again.";
+      }
+    }
+
+    restartBtn.addEventListener('click', startQuiz);
+
+    // Initialize Quiz
+    startQuiz();
+  </script>
+</body>
+</html>
